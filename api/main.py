@@ -71,6 +71,19 @@ async def predict(
     signature = MODEL.signatures["serving_default"]
     predictions = signature(inputs=tf.constant(img_batch))
 
+    print("\n\n\n")
+    print("prediction result",predictions['output_0'])
+    print("\n\n\n")
+    
+    """
+    print(predictions) gives output
+
+    {'output_0': <tf.Tensor: shape=(1, 10), dtype=float32, numpy=
+    array([[6.6739580e-05, 3.1271740e-03, 1.8913829e-04, 2.7338654e-04,
+        6.9231202e-05, 3.6120699e-03, 9.1114128e-01, 5.6367026e-05,
+        2.5995148e-05, 8.1438743e-02]], dtype=float32)>}
+
+    """
     predicted_class = CLASS_NAMES[np.argmax(predictions['output_0'][0])]
     confidence = np.max(predictions['output_0'][0])
     return {
