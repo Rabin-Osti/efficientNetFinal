@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import numpy as np
@@ -9,8 +9,7 @@ import tensorflow as tf
 app = FastAPI()
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
+    "http://localhost:5173"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -24,27 +23,27 @@ app.add_middleware(
 
 try:
     MODEL = tf.saved_model.load("../models/1")
-    print(MODEL.signatures)
+    # print(MODEL.signatures)
 except Exception as e:
     print("Error loading the model:", e)
 
 CLASS_NAMES = [
-    "Tomato_Bacterial_spot",
-    "Tomato_Early_blight",
-    "Tomato_Late_blight",
-    "Tomato_Leaf_Mold",
-    "Tomato_Septoria_leaf_spot",
-    "Tomato_Spider_mites_Two_spotted_spider_mite",
-    "Tomato__Target_Spot",
-    "Tomato__Tomato_YellowLeaf__Curl_Virus",
-    "Tomato__Tomato_mosaic_virus",
-    "Tomato_health"
+    "Bacterial Spot",
+    "Early Blight",
+    "Late Blight",
+    "Leaf Mold",
+    "Septoria Leaf Spot",
+    "Spider Mites (Two Spotted Spider Mite)",
+    "Target Spot",
+    "YellowLeaf Curl Virus",
+    "Mosaic Virus",
+    "Healthy"
 ]
 
 
 @app.get("/ping")
 async def ping():
-    return "Hello, I am alive"
+    return {"Status": "Running"}
 
 
 def read_file_as_image(data) -> np.ndarray:
@@ -64,6 +63,8 @@ def read_file_as_image(data) -> np.ndarray:
 async def predict(
     file: UploadFile = File(...)
 ):
+    if MODEL is None:
+        raise HTTPException(status_code=500, detail="Model couldn't be loaded.")
     image = read_file_as_image(await file.read())
     img_batch = np.expand_dims(image, 0)
     
@@ -72,7 +73,7 @@ async def predict(
     predictions = signature(inputs=tf.constant(img_batch))
 
     print("\n\n\n")
-    print("prediction result",predictions['output_0'])
+    print(predictions['output_0'])
     print("\n\n\n")
     
     """
